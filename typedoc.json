@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/node/index.ts", "src/web/index.ts"],
+  "entryPointStrategy": "expand",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "docs/api-md",
+  "outputFileStrategy": "modules",
+  "readme": "none",
+  "githubPages": false,
+  "hidePageHeader": true,
+  "hideBreadcrumbs": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "exclude": ["**/gen/**", "**/dist/**", "**/node_modules/**", "**/src/internal/**"]
+}
