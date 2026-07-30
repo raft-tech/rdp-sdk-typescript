@@ -1,7 +1,10 @@
 import type { Interceptor } from "@connectrpc/connect";
 import {
+  type ResolvedAuth,
   type TokenFetcher,
   apiKeyInterceptor,
+  authorizationInterceptor,
+  bearerAuthHeader,
   clientCredentialsInterceptor,
   userAgentInterceptor,
   validateAuth,
@@ -44,10 +47,22 @@ export function resolveEndpoint(rawEndpoint: string | undefined): string {
   return endpoint;
 }
 
+/** Resolve client auth from the shared SDK options. */
+export function resolveAuth(o: Options, logger: Logger): ResolvedAuth {
+  return validateAuth(
+    {
+      clientCredentials: o.clientCredentials,
+      apiKey: o.apiKey,
+      bearerToken: o.bearerToken,
+    },
+    logger,
+  );
+}
+
 /**
  * Build the interceptor chain shared by every facade on both the node and
- * web SDKs: userAgent → auth (api_key | client_credentials) → logging →
- * timeout. Callers own the platform-specific createConnectTransport call
+ * web SDKs: userAgent -> auth -> logging -> timeout. Callers own the
+ * platform-specific createConnectTransport call
  * because its options differ materially (HTTP/2 + nodeOptions on node,
  * plain fetch-based on web).
  */
@@ -56,12 +71,8 @@ export function buildInterceptors(
   o: Options,
   tokenFetcher: TokenFetcher,
   logger: Logger,
+  auth: ResolvedAuth = resolveAuth(o, logger),
 ): Interceptor[] {
-  const auth = validateAuth(
-    { clientCredentials: o.clientCredentials, apiKey: o.apiKey },
-    logger,
-  );
-
   const interceptors: Interceptor[] = [userAgentInterceptor()];
 
   if (auth.method === "client_credentials") {
@@ -77,6 +88,8 @@ export function buildInterceptors(
     );
   } else if (auth.method === "api_key") {
     interceptors.push(apiKeyInterceptor(auth.apiKey));
+  } else if (auth.method === "bearer") {
+    interceptors.push(authorizationInterceptor(bearerAuthHeader(auth.token)));
   }
 
   interceptors.push(loggingInterceptor(logger), timeoutInterceptor(o.timeout));

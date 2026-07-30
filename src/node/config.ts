@@ -57,6 +57,7 @@ export function loadConfig(opts?: {
       apiKey: process.env.RDP_API_KEY,
       clientId: process.env.RDP_CLIENT_ID,
       clientSecret: process.env.RDP_CLIENT_SECRET,
+      bearerToken: process.env.RDP_BEARER_TOKEN,
     },
     logger,
   );

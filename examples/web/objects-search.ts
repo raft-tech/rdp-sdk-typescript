@@ -4,8 +4,8 @@
 //
 // Browser applications should pass those values into endpoint and apiKey.
 
+import { SearchObjectsRequestSchema } from "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/service/object_service_pb.js";
 import { create } from "@bufbuild/protobuf";
-import { SearchObjectsRequestSchema } from "../../gen/raft/wdm/v1/service/object_service_pb.js";
 import { WithAPIKey, createClient } from "../../src/web/index.js";
 
 const endpoint = "https://rdp.example.com";

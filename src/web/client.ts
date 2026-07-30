@@ -1,19 +1,37 @@
+import { ActionService } from "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/service/action_service_pb.js";
+import { ObjectService } from "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/service/object_service_pb.js";
 import {
   type Client,
   createClient as connectCreateClient,
 } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
-import { ActionService } from "../../gen/raft/wdm/v1/service/action_service_pb.js";
-import { ObjectService } from "../../gen/raft/wdm/v1/service/object_service_pb.js";
+import {
+  type CatalogClient,
+  catalogBasePath,
+  createCatalogClient,
+} from "../catalog/index.js";
 import { type Option, defaultOptions } from "../internal/options.js";
+import { RestTransport } from "../internal/rest.js";
 import {
   buildInterceptors,
   resolveArgs,
+  resolveAuth,
   resolveEndpoint,
 } from "../internal/transport.js";
 import { VERSION } from "../internal/version.js";
+import { webFetch } from "../internal/web/fetch.js";
 import { createLogger } from "../internal/web/logging.js";
 import { webTokenFetcher } from "../internal/web/token-fetcher.js";
+import {
+  type PipelinesClient,
+  createPipelinesClient,
+  pipelinesBasePath,
+} from "../pipelines/index.js";
+import {
+  type TransformersClient,
+  createTransformersClient,
+  transformersBasePath,
+} from "../transformers/index.js";
 
 /** Full ObjectService client from ConnectRPC (not exported — see WebObjectServiceClient). */
 type FullObjectServiceClient = Client<typeof ObjectService>;
@@ -38,6 +56,9 @@ export type WebObjectServiceClient = Omit<
 export interface RdpV1WebClient {
   readonly objectService: WebObjectServiceClient;
   readonly actionService: ActionServiceClient;
+  readonly catalog: CatalogClient;
+  readonly pipelines: PipelinesClient;
+  readonly transformers: TransformersClient;
 }
 
 /**
@@ -71,23 +92,60 @@ export function createClient(
 
   const endpoint = resolveEndpoint(rawEndpoint);
   const logger = createLogger(o.logger);
+  const auth = resolveAuth(o, logger);
+  const tokenFetcher = webTokenFetcher();
 
   const interceptors = buildInterceptors(
     endpoint,
     o,
-    webTokenFetcher(),
+    tokenFetcher,
     logger,
+    auth,
   );
 
   const transport = createConnectTransport({
     baseUrl: endpoint,
     interceptors,
   });
+  const restFetch = webFetch();
 
   logger.info({ endpoint, version: VERSION }, "client initialized");
 
   return {
     objectService: connectCreateClient(ObjectService, transport),
     actionService: connectCreateClient(ActionService, transport),
+    catalog: createCatalogClient(
+      new RestTransport({
+        endpoint,
+        basePath: catalogBasePath(),
+        auth,
+        tokenFetcher,
+        logger,
+        timeout: o.timeout,
+        fetch: restFetch,
+      }),
+    ),
+    pipelines: createPipelinesClient(
+      new RestTransport({
+        endpoint,
+        basePath: pipelinesBasePath(),
+        auth,
+        tokenFetcher,
+        logger,
+        timeout: o.timeout,
+        fetch: restFetch,
+      }),
+    ),
+    transformers: createTransformersClient(
+      new RestTransport({
+        endpoint,
+        basePath: transformersBasePath(),
+        auth,
+        tokenFetcher,
+        logger,
+        timeout: o.timeout,
+        fetch: restFetch,
+      }),
+    ),
   };
 }

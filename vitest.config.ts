@@ -6,7 +6,15 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
-      exclude: ["src/**/index.ts"],
+      exclude: [
+        "src/**/index.ts",
+        "src/catalog/openapi.ts",
+        "src/catalog/types.ts",
+        "src/pipelines/openapi.ts",
+        "src/pipelines/types.ts",
+        "src/transformers/openapi.ts",
+        "src/transformers/types.ts",
+      ],
       thresholds: {
         lines: 80,
         functions: 80,

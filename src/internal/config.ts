@@ -1,6 +1,11 @@
 import { type ResolvedAuth, validateAuth } from "./auth.js";
 import type { Logger } from "./logger.js";
-import { type Option, WithAPIKey, WithClientCredentials } from "./options.js";
+import {
+  type Option,
+  WithAPIKey,
+  WithBearerToken,
+  WithClientCredentials,
+} from "./options.js";
 
 /** Validated SDK configuration. */
 export interface RdpConfig {
@@ -17,6 +22,7 @@ export interface RawConfig {
   apiKey?: string;
   clientId?: string;
   clientSecret?: string;
+  bearerToken?: string;
 }
 
 /** Default endpoint when none is provided. Mirrors Go's internal.DefaultEndpoint. */
@@ -35,8 +41,7 @@ function normalize(val?: string): string | undefined {
  * so any component on the endpoint that would distort that path is
  * rejected: path, query, fragment, and userinfo. Userinfo is rejected
  * in particular because browser `fetch` and node:https translate it
- * into an `Authorization: Basic` header that would bypass the SDK's
- * auth model.
+ * into an Authorization header that would bypass the SDK's auth model.
  *
  * A trailing root slash (`https://host/`) is expected to have been
  * trimmed by the caller before validation.
@@ -119,12 +124,12 @@ export function validateConfig(raw: RawConfig, logger: Logger): RdpConfig {
   // Build credentials object only when both parts are present
   const clientCredentials =
     clientId && clientSecret ? { clientId, clientSecret } : undefined;
-
   // Delegate auth validation + resolution to the single source of truth
   const auth = validateAuth(
     {
       clientCredentials,
       apiKey: normalize(raw.apiKey),
+      bearerToken: raw.bearerToken,
     },
     logger,
   );
@@ -149,6 +154,8 @@ export function fromConfig(cfg: RdpConfig): [string, ...Option[]] {
     opts.push(WithClientCredentials(cfg.auth.clientId, cfg.auth.clientSecret));
   } else if (cfg.auth.method === "api_key") {
     opts.push(WithAPIKey(cfg.auth.apiKey));
+  } else if (cfg.auth.method === "bearer") {
+    opts.push(WithBearerToken(cfg.auth.token));
   }
 
   return [cfg.serverUrl, ...opts];

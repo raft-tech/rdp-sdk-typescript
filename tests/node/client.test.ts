@@ -12,6 +12,9 @@ describe("createClient (wdm v1 node)", () => {
     expect(client).toBeDefined();
     expect(client.objectService).toBeDefined();
     expect(client.actionService).toBeDefined();
+    expect(client.catalog).toBeDefined();
+    expect(client.pipelines).toBeDefined();
+    expect(client.transformers).toBeDefined();
   });
 
   it("throws on empty endpoint", async () => {
@@ -33,13 +36,15 @@ describe("createClient (wdm v1 node)", () => {
 
     const client = createClient(WithLogger(logger));
     expect(client).toBeDefined();
+    expect(client.pipelines).toBeDefined();
+    expect(client.transformers).toBeDefined();
     expect(info).toHaveBeenCalledWith(
       expect.objectContaining({ endpoint: "https://rdp.local" }),
       "client initialized",
     );
   });
 
-  it("throws when both auth methods are set", async () => {
+  it("throws when multiple auth methods are set", async () => {
     const { createClient } = await loadModule();
     const { WithClientCredentials, WithAPIKey } = await import(
       "../../src/internal/options.js"
@@ -51,7 +56,7 @@ describe("createClient (wdm v1 node)", () => {
         WithAPIKey("key"),
       ),
     ).toThrowError(
-      "rdp: both clientCredentials and apiKey are set — provide exactly one auth method",
+      "rdp: multiple auth methods are set — provide exactly one auth method",
     );
   });
 
@@ -65,6 +70,8 @@ describe("createClient (wdm v1 node)", () => {
       WithClientCredentials("id", "secret"),
     );
     expect(client).toBeDefined();
+    expect(client.pipelines).toBeDefined();
+    expect(client.transformers).toBeDefined();
   });
 
   it("objectService and actionService accessors are defined", async () => {
@@ -72,6 +79,9 @@ describe("createClient (wdm v1 node)", () => {
     const client = createClient("http://localhost:8080");
     expect(client.objectService).toBeDefined();
     expect(client.actionService).toBeDefined();
+    expect(client.catalog).toBeDefined();
+    expect(client.pipelines).toBeDefined();
+    expect(client.transformers).toBeDefined();
   });
 
   it("emits the TLS-skip warning when WithTLSSkipVerify is set", async () => {

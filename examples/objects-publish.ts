@@ -4,10 +4,10 @@
 //   npm run build
 //   node dist/examples/objects-publish.js
 
+import { ObjectStatus } from "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/object_pb.js";
+import { PublishObjectRequestSchema } from "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/service/object_service_pb.js";
 import { create } from "@bufbuild/protobuf";
 import { timestampNow } from "@bufbuild/protobuf/wkt";
-import { ObjectStatus } from "../gen/raft/wdm/v1/object_pb.js";
-import { PublishObjectRequestSchema } from "../gen/raft/wdm/v1/service/object_service_pb.js";
 import { createClient, fromNodeConfig, loadConfig } from "../src/node/index.js";
 
 const exampleObjectId = "sdk-example-object";

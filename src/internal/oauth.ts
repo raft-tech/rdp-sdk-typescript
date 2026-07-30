@@ -30,7 +30,7 @@ export type OauthCustomFetch = (
  * token request path must too.
  */
 export function makeTokenFetcher(customFetch?: OauthCustomFetch): TokenFetcher {
-  return async (url, body): Promise<TokenResponse> => {
+  return async (url, body, signal): Promise<TokenResponse> => {
     const tokenUrl = new URL(url);
     const as: oauth.AuthorizationServer = {
       issuer: tokenUrl.origin,
@@ -40,29 +40,71 @@ export function makeTokenFetcher(customFetch?: OauthCustomFetch): TokenFetcher {
     const clientSecret = body.get("client_secret") ?? "";
     const client: oauth.Client = { client_id: clientId };
     const clientAuth = oauth.ClientSecretPost(clientSecret);
+    const requestSignal = combineSignals(
+      signal,
+      AbortSignal.timeout(TOKEN_FETCH_TIMEOUT_MS),
+    );
 
-    const response = await oauth.clientCredentialsGrantRequest(
-      as,
-      client,
-      clientAuth,
-      new URLSearchParams(),
-      {
-        signal: AbortSignal.timeout(TOKEN_FETCH_TIMEOUT_MS),
-        // oauth4webapi marks this symbol @deprecated purely to make it
-        // visually stand out; it's the supported way to accept http:// for
-        // local development.
-        [oauth.allowInsecureRequests]: true,
-        ...(customFetch ? { [oauth.customFetch]: customFetch } : {}),
-      },
-    );
-    const tokenResponse = await oauth.processClientCredentialsResponse(
-      as,
-      client,
-      response,
-    );
-    return {
-      access_token: tokenResponse.access_token,
-      expires_in: tokenResponse.expires_in,
-    };
+    try {
+      const response = await oauth.clientCredentialsGrantRequest(
+        as,
+        client,
+        clientAuth,
+        new URLSearchParams(),
+        {
+          signal: requestSignal.signal,
+          // oauth4webapi marks this symbol @deprecated purely to make it
+          // visually stand out; it's the supported way to accept http:// for
+          // local development.
+          [oauth.allowInsecureRequests]: true,
+          ...(customFetch ? { [oauth.customFetch]: customFetch } : {}),
+        },
+      );
+      const tokenResponse = await oauth.processClientCredentialsResponse(
+        as,
+        client,
+        response,
+      );
+      return {
+        access_token: tokenResponse.access_token,
+        expires_in: tokenResponse.expires_in,
+      };
+    } finally {
+      requestSignal.cleanup();
+    }
   };
 }
+
+interface CombinedSignal {
+  signal: AbortSignal;
+  cleanup: () => void;
+}
+
+function combineSignals(
+  callerSignal: AbortSignal | undefined,
+  timeoutSignal: AbortSignal,
+): CombinedSignal {
+  if (!callerSignal) {
+    return { signal: timeoutSignal, cleanup: noop };
+  }
+  if (callerSignal.aborted) {
+    return { signal: callerSignal, cleanup: noop };
+  }
+  if (timeoutSignal.aborted) {
+    return { signal: timeoutSignal, cleanup: noop };
+  }
+
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  callerSignal.addEventListener("abort", abort, { once: true });
+  timeoutSignal.addEventListener("abort", abort, { once: true });
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      callerSignal.removeEventListener("abort", abort);
+      timeoutSignal.removeEventListener("abort", abort);
+    },
+  };
+}
+
+function noop(): void {}

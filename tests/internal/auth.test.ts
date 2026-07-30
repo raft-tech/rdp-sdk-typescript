@@ -1,9 +1,11 @@
-import type { StreamRequest, UnaryRequest } from "@connectrpc/connect";
+import type { UnaryRequest } from "@connectrpc/connect";
 import pino from "pino";
 import { describe, expect, it, vi } from "vitest";
 import {
   type TokenFetcher,
   apiKeyInterceptor,
+  authorizationInterceptor,
+  bearerAuthHeader,
   clientCredentialsInterceptor,
   userAgentInterceptor,
   validateAuth,
@@ -22,7 +24,7 @@ function makeReq(): UnaryRequest {
 }
 
 describe("validateAuth", () => {
-  it("throws when both clientCredentials and apiKey are set", () => {
+  it("throws when multiple auth methods are set", () => {
     expect(() =>
       validateAuth(
         {
@@ -32,7 +34,7 @@ describe("validateAuth", () => {
         silentLogger,
       ),
     ).toThrowError(
-      "rdp: both clientCredentials and apiKey are set — provide exactly one auth method",
+      "rdp: multiple auth methods are set — provide exactly one auth method",
     );
   });
 
@@ -106,6 +108,25 @@ describe("validateAuth", () => {
     const result = validateAuth({ apiKey: "k-123" }, silentLogger);
     expect(result).toEqual({ method: "api_key", apiKey: "k-123" });
   });
+
+  it("returns bearer auth with trimmed token", () => {
+    const result = validateAuth({ bearerToken: " tok-123 " }, silentLogger);
+    expect(result).toEqual({ method: "bearer", token: "tok-123" });
+  });
+
+  it("warns for empty bearer token and falls through", () => {
+    const warn = vi.fn();
+    const logger = {
+      warn,
+      info: vi.fn(),
+      debug: vi.fn(),
+      error: vi.fn(),
+    } as unknown as pino.Logger;
+    const result = validateAuth({ bearerToken: "   " }, logger);
+    expect(result).toEqual({ method: "none" });
+    expect(warn).toHaveBeenCalledWith("rdp: bearer_token is empty, ignoring");
+    expect(warn).toHaveBeenCalledWith("rdp: no auth configured");
+  });
 });
 
 describe("userAgentInterceptor", () => {
@@ -126,6 +147,17 @@ describe("apiKeyInterceptor", () => {
     const mockNext = vi.fn().mockResolvedValue({ ok: true });
     await interceptor(mockNext)(req);
     expect(req.header.get("X-API-Key")).toBe("my-key");
+    expect(mockNext).toHaveBeenCalledWith(req);
+  });
+});
+
+describe("authorizationInterceptor", () => {
+  it("sets Bearer Authorization header on request", async () => {
+    const interceptor = authorizationInterceptor(bearerAuthHeader("tok-123"));
+    const req = makeReq();
+    const mockNext = vi.fn().mockResolvedValue({ ok: true });
+    await interceptor(mockNext)(req);
+    expect(req.header.get("Authorization")).toBe("Bearer tok-123");
     expect(mockNext).toHaveBeenCalledWith(req);
   });
 });

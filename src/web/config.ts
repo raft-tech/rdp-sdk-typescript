@@ -10,6 +10,7 @@ export interface RdpEnv {
   RDP_API_KEY?: string;
   RDP_CLIENT_ID?: string;
   RDP_CLIENT_SECRET?: string;
+  RDP_BEARER_TOKEN?: string;
 }
 
 /**
@@ -26,6 +27,7 @@ export function loadConfig(env: RdpEnv, logger?: Logger): RdpConfig {
       apiKey: env.RDP_API_KEY,
       clientId: env.RDP_CLIENT_ID,
       clientSecret: env.RDP_CLIENT_SECRET,
+      bearerToken: env.RDP_BEARER_TOKEN,
     },
     createLogger(logger),
   );

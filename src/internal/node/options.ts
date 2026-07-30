@@ -5,6 +5,7 @@ export {
   type Option,
   type Options as CoreOptions,
   WithAPIKey,
+  WithBearerToken,
   WithClientCredentials,
   WithLogger,
   WithTimeout,

@@ -11,6 +11,7 @@ export interface Options {
   /** OAuth2 client credentials for token-based auth. */
   clientCredentials?: { clientId: string; clientSecret: string };
   apiKey?: string;
+  bearerToken?: string;
   logger?: Logger;
 }
 
@@ -36,6 +37,13 @@ export function WithClientCredentials(
 export function WithAPIKey(key: string): Option {
   return (o) => {
     o.apiKey = key;
+  };
+}
+
+/** Configures static bearer token authentication. */
+export function WithBearerToken(token: string): Option {
+  return (o) => {
+    o.bearerToken = token;
   };
 }
 

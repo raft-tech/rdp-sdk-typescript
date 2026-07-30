@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Logger } from "../../src/internal/logger.js";
 import {
   WithAPIKey,
+  WithBearerToken,
   WithClientCredentials,
   WithLogger,
   WithTimeout,
@@ -19,6 +20,10 @@ describe("defaultOptions", () => {
 
   it("returns no api key", () => {
     expect(defaultOptions().apiKey).toBeUndefined();
+  });
+
+  it("returns no bearer token", () => {
+    expect(defaultOptions().bearerToken).toBeUndefined();
   });
 
   it("returns no logger", () => {
@@ -40,6 +45,12 @@ describe("functional options", () => {
     const opts = defaultOptions();
     WithAPIKey("key-123")(opts);
     expect(opts.apiKey).toBe("key-123");
+  });
+
+  it("WithBearerToken sets bearer token", () => {
+    const opts = defaultOptions();
+    WithBearerToken("tok-123")(opts);
+    expect(opts.bearerToken).toBe("tok-123");
   });
 
   it("WithTimeout sets custom timeout", () => {

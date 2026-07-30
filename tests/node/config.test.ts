@@ -12,6 +12,7 @@ describe("loadConfig (wdm v1 node)", () => {
       "RDP_API_KEY",
       "RDP_CLIENT_ID",
       "RDP_CLIENT_SECRET",
+      "RDP_BEARER_TOKEN",
     ]) {
       delete process.env[key];
     }
@@ -26,6 +27,15 @@ describe("loadConfig (wdm v1 node)", () => {
 
     expect(cfg.serverUrl).toBe("https://wdm.example.com:8443");
     expect(cfg.auth).toEqual({ method: "api_key", apiKey: "key-123" });
+  });
+
+  it("reads Bearer auth env var", async () => {
+    process.env.RDP_BEARER_TOKEN = "tok-123";
+
+    const { loadConfig } = await import("../../src/node/config.js");
+    const cfg = loadConfig();
+
+    expect(cfg.auth).toEqual({ method: "bearer", token: "tok-123" });
   });
 
   it("accepts custom env file path", async () => {

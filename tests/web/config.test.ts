@@ -22,4 +22,13 @@ describe("loadConfig (wdm v1 web)", () => {
       clientSecret: "my-secret",
     });
   });
+
+  it("parses Bearer auth key from plain object", () => {
+    const cfg = loadConfig({
+      RDP_SERVER_URL: "https://wdm.example.com",
+      RDP_BEARER_TOKEN: "tok-123",
+    });
+    expect(cfg.serverUrl).toBe("https://wdm.example.com");
+    expect(cfg.auth).toEqual({ method: "bearer", token: "tok-123" });
+  });
 });

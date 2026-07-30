@@ -100,14 +100,19 @@ describe("validateConfig", () => {
     expect(cfg.auth).toEqual({ method: "api_key", apiKey: "key-123" });
   });
 
-  it("throws when both auth methods are set", () => {
+  it("resolves valid Bearer auth", () => {
+    const cfg = validateConfig({ bearerToken: "tok-123" }, mockLogger());
+    expect(cfg.auth).toEqual({ method: "bearer", token: "tok-123" });
+  });
+
+  it("throws when multiple auth methods are set", () => {
     expect(() =>
       validateConfig(
         { clientId: "id", clientSecret: "sec", apiKey: "key" },
         mockLogger(),
       ),
     ).toThrow(
-      "rdp: both clientCredentials and apiKey are set — provide exactly one auth method",
+      "rdp: multiple auth methods are set — provide exactly one auth method",
     );
   });
 
@@ -126,6 +131,15 @@ describe("validateConfig", () => {
     expect(cfg.auth).toEqual({ method: "none" });
     expect(logger.warn).toHaveBeenCalledWith(
       "rdp: incomplete client credentials, ignoring",
+    );
+  });
+
+  it("warns and falls through on empty Bearer auth", () => {
+    const logger = mockLogger();
+    const cfg = validateConfig({ bearerToken: "  " }, logger);
+    expect(cfg.auth).toEqual({ method: "none" });
+    expect(logger.warn).toHaveBeenCalledWith(
+      "rdp: bearer_token is empty, ignoring",
     );
   });
 
@@ -167,6 +181,15 @@ describe("validateConfig", () => {
       logger,
     );
     expect(cfg.auth).toEqual({ method: "api_key", apiKey: "key" });
+  });
+
+  it("flows bearer auth through insecure mode", () => {
+    const logger = mockLogger();
+    const cfg = validateConfig(
+      { tlsSkipVerify: "true", bearerToken: "tok" },
+      logger,
+    );
+    expect(cfg.auth).toEqual({ method: "bearer", token: "tok" });
   });
 
   // D4 — RDP_SERVER_URL component validation
@@ -246,6 +269,18 @@ describe("fromConfig", () => {
     const o = defaultOptions();
     for (const opt of opts) opt(o);
     expect(o.apiKey).toBe("key-123");
+  });
+
+  it("maps bearer auth to WithBearerToken option", () => {
+    const cfg: RdpConfig = {
+      serverUrl: "https://rdp.local",
+      tlsSkipVerify: false,
+      auth: { method: "bearer", token: "tok-123" },
+    };
+    const [, ...opts] = fromConfig(cfg);
+    const o = defaultOptions();
+    for (const opt of opts) opt(o);
+    expect(o.bearerToken).toBe("tok-123");
   });
 
   it("returns no auth options for method none", () => {

@@ -4,8 +4,8 @@
 //   npm run build
 //   node dist/examples/objects-search.js
 
+import { SearchObjectsRequestSchema } from "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/service/object_service_pb.js";
 import { create } from "@bufbuild/protobuf";
-import { SearchObjectsRequestSchema } from "../gen/raft/wdm/v1/service/object_service_pb.js";
 import { createClient, fromNodeConfig, loadConfig } from "../src/node/index.js";
 
 const cfg = loadConfig();
