@@ -7,6 +7,7 @@ export {
   WithAPIKey,
   WithBearerToken,
   WithClientCredentials,
+  WithFetch,
   WithLogger,
   WithTimeout,
 } from "../internal/index.js";

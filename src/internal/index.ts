@@ -22,6 +22,7 @@ export {
   WithAPIKey,
   WithBearerToken,
   WithClientCredentials,
+  WithFetch,
   WithLogger,
   WithTimeout,
   defaultOptions,

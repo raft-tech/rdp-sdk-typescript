@@ -87,4 +87,44 @@ describe("createClient (wdm v1 web)", () => {
     const [, transformersInit] = fetch.mock.calls[2] as [string, RequestInit];
     expect(transformersInit.redirect).toBe("error");
   });
+
+  it("uses WithFetch for catalog REST requests", async () => {
+    const { createClient } = await loadModule();
+    const { WithFetch } = await import("../../src/web/index.js");
+    const fetch = vi.fn(async () => Response.json([]));
+
+    const client = createClient("https://rdp.example.com", WithFetch(fetch));
+    await client.catalog.dataSources.list();
+
+    expect(fetch).toHaveBeenCalledOnce();
+    const [url] = fetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain("https://rdp.example.com/api/v2/catalog");
+  });
+
+  it("uses WithFetch for Connect requests", async () => {
+    const { createClient } = await loadModule();
+    const { WithFetch } = await import("../../src/web/index.js");
+    const { create } = await import("@bufbuild/protobuf");
+    const { SearchObjectsRequestSchema } = await import(
+      "@buf/raft_wdm.bufbuild_es/raft/wdm/v1/service/object_service_pb.js"
+    );
+    const fetch = vi.fn(async () =>
+      Response.json(
+        { objects: [] },
+        { headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    const client = createClient("https://rdp.example.com", WithFetch(fetch));
+    await client.objectService.searchObjects(
+      create(SearchObjectsRequestSchema, { pageSize: 1 }),
+    );
+
+    expect(fetch).toHaveBeenCalledOnce();
+    const [url, init] = fetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(
+      "https://rdp.example.com/raft.wdm.v1.service.ObjectService/SearchObjects",
+    );
+    expect(init.method).toBe("POST");
+  });
 });

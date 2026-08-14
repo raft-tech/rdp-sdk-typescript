@@ -12,6 +12,7 @@ export interface Options {
   clientCredentials?: { clientId: string; clientSecret: string };
   apiKey?: string;
   bearerToken?: string;
+  fetch?: typeof globalThis.fetch;
   logger?: Logger;
 }
 
@@ -44,6 +45,13 @@ export function WithAPIKey(key: string): Option {
 export function WithBearerToken(token: string): Option {
   return (o) => {
     o.bearerToken = token;
+  };
+}
+
+/** Configures the Web SDK fetch implementation. */
+export function WithFetch(fetch: typeof globalThis.fetch): Option {
+  return (o) => {
+    o.fetch = fetch;
   };
 }
 

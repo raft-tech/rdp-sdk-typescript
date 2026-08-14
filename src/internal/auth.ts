@@ -52,7 +52,7 @@ export type TokenProvider = (signal?: AbortSignal) => Promise<string>;
  * through regardless of insecure mode. The TLS-skip warning is emitted
  * separately at client construction.
  *
- * Throws if both clientCredentials and apiKey are set, warns if neither
+ * Throws if more than one auth method is set, warns if none
  * is set. Returns the resolved auth method so callers can use it for
  * interceptor wiring or config building.
  */

@@ -4,6 +4,7 @@ import {
   WithAPIKey,
   WithBearerToken,
   WithClientCredentials,
+  WithFetch,
   WithLogger,
   WithTimeout,
   defaultOptions,
@@ -29,6 +30,10 @@ describe("defaultOptions", () => {
   it("returns no logger", () => {
     expect(defaultOptions().logger).toBeUndefined();
   });
+
+  it("returns no fetch override", () => {
+    expect(defaultOptions().fetch).toBeUndefined();
+  });
 });
 
 describe("functional options", () => {
@@ -51,6 +56,13 @@ describe("functional options", () => {
     const opts = defaultOptions();
     WithBearerToken("tok-123")(opts);
     expect(opts.bearerToken).toBe("tok-123");
+  });
+
+  it("WithFetch sets fetch override", () => {
+    const opts = defaultOptions();
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    WithFetch(fetch)(opts);
+    expect(opts.fetch).toBe(fetch);
   });
 
   it("WithTimeout sets custom timeout", () => {

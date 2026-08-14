@@ -1,6 +1,6 @@
 {
   "name": "@raft-tech/rdp-sdk-typescript",
-  "version": "2026.31.0",
+  "version": "2026.33.0",
   "description": "TypeScript SDK for client applications interacting with RDP.",
   "type": "module",
   "license": "Apache-2.0",

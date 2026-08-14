@@ -94,6 +94,7 @@ export function createClient(
   const logger = createLogger(o.logger);
   const auth = resolveAuth(o, logger);
   const tokenFetcher = webTokenFetcher();
+  const fetch = o.fetch ?? webFetch();
 
   const interceptors = buildInterceptors(
     endpoint,
@@ -105,9 +106,9 @@ export function createClient(
 
   const transport = createConnectTransport({
     baseUrl: endpoint,
+    fetch,
     interceptors,
   });
-  const restFetch = webFetch();
 
   logger.info({ endpoint, version: VERSION }, "client initialized");
 
@@ -122,7 +123,7 @@ export function createClient(
         tokenFetcher,
         logger,
         timeout: o.timeout,
-        fetch: restFetch,
+        fetch,
       }),
     ),
     pipelines: createPipelinesClient(
@@ -133,7 +134,7 @@ export function createClient(
         tokenFetcher,
         logger,
         timeout: o.timeout,
-        fetch: restFetch,
+        fetch,
       }),
     ),
     transformers: createTransformersClient(
@@ -144,7 +145,7 @@ export function createClient(
         tokenFetcher,
         logger,
         timeout: o.timeout,
-        fetch: restFetch,
+        fetch,
       }),
     ),
   };

@@ -145,3 +145,15 @@ Use `WithClientCredentials(clientId, clientSecret)` only when your
 deployment requires OAuth2 client credentials. Use `WithTLSSkipVerify()`
 only in Node for development or test endpoints with self-signed
 certificates.
+
+Browser hosts can provide their own fetch implementation for auth,
+instrumentation, or embedded runtimes:
+
+```ts
+import { createClient, WithFetch } from "@raft-tech/rdp-sdk-typescript/web";
+
+const client = createClient(
+  "https://rdp.example.com",
+  WithFetch(authenticatedFetch),
+);
+```
