@@ -8,6 +8,8 @@ and logging helpers for the RDP API surface.
 For platform concepts, API guides, and integration details, see
 https://developer.teamraft.com.
 
+See [Terms of Use](https://developer.teamraft.com/terms-of-use/).
+
 ## Installation
 
 ```bash

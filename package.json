@@ -1,6 +1,6 @@
 {
   "name": "@raft-tech/rdp-sdk-typescript",
-  "version": "2026.33.0",
+  "version": "2026.38.0",
   "description": "TypeScript SDK for client applications interacting with RDP.",
   "type": "module",
   "license": "Apache-2.0",
@@ -19,6 +19,7 @@
   "files": [
     "dist/",
     "README.md",
+    "TERMS_OF_USE.md",
     "LICENSE"
   ],
   "engines": {
